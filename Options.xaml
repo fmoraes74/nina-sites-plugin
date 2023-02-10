@@ -123,6 +123,47 @@
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
+                        <GridViewColumn Header="Horizon">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="20" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBox
+                                            Grid.Column="0"
+                                            MinWidth="300"
+                                            HorizontalAlignment="Stretch"
+                                            VerticalAlignment="Center"
+                                            VerticalContentAlignment="Center">
+                                            <TextBox.Text>
+                                                <Binding Path="HorizonFilePath" UpdateSourceTrigger="LostFocus">
+                                                    <Binding.ValidationRules>
+                                                        <rules:FileExistsOrEmptyRule />
+                                                    </Binding.ValidationRules>
+                                                </Binding>
+                                            </TextBox.Text>
+                                        </TextBox>
+
+                                        <Button
+                                            Grid.Column="1"
+                                            Width="20"
+                                            Height="21"
+                                            Margin="5,0,0,0"
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"
+                                            Command="{Binding HorizonCommand}">
+                                            <Path
+                                            Margin="2,10,2,0"
+                                            Data="{StaticResource DotsSVG}"
+                                            Fill="{StaticResource ButtonForegroundBrush}"
+                                            Stretch="Uniform" />
+                                        </Button>
+                                    </Grid>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
                     </GridView>
                 </ListView.View>
             </ListView>
@@ -143,7 +184,8 @@
                 <Button
                             Width="40"
                             Margin="1,5,0,5"
-                            Command="{Binding CloneSiteCommand}">
+                            Command="{Binding CloneSiteCommand}"
+                            IsEnabled="{Binding ButtonEnablement}">
                     <Button.ToolTip>
                         <TextBlock Text="Clone the current location" />
                     </Button.ToolTip>
@@ -156,7 +198,8 @@
                 <Button
                             Width="40"
                             Margin="1,5,0,5"
-                            Command="{Binding RemoveSiteCommand}">
+                            Command="{Binding RemoveSiteCommand}"
+                            IsEnabled="{Binding ButtonEnablement}">
                     <Button.ToolTip>
                         <TextBlock Text="Delete the selected site" />
                     </Button.ToolTip>
@@ -170,7 +213,8 @@
                             Grid.Column="1"
                             Width="100"
                             Margin="1,5,0,5"
-                            Command="{Binding SetSiteCommand}">
+                            Command="{Binding SetSiteCommand}"
+                            IsEnabled="{Binding ButtonEnablement}">
                     <Button.ToolTip>
                         <TextBlock Text="Sets the current location to the selected site" />
                     </Button.ToolTip>

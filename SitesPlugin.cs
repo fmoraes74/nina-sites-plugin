@@ -13,6 +13,8 @@ using System.Xml.Serialization;
 using Settings = FMoraes.NINA.SitesPlugin.Properties.Settings;
 using System.Windows.Input;
 using System.IO;
+using System.Windows.Controls;
+using NINA.WPF.Base.Interfaces.ViewModel;
 
 namespace FMoraes.NINA.SitesPlugin {
     /// <summary>
@@ -26,6 +28,7 @@ namespace FMoraes.NINA.SitesPlugin {
     public class SitesPlugin : PluginBase, INotifyPropertyChanged {
         private IPluginOptionsAccessor pluginSettings;
         private IProfileService profileService;
+        private IOptionsVM optionsVM;
 
         private ObserveAllCollection<SiteInfo> _sites;
         private SiteInfo _selectedSite;
@@ -36,6 +39,7 @@ namespace FMoraes.NINA.SitesPlugin {
             set {
                 _selectedSite = value;
                 RaisePropertyChanged();
+                RaisePropertyChanged(nameof(ButtonEnablement));
             }
         }
 
@@ -54,10 +58,16 @@ namespace FMoraes.NINA.SitesPlugin {
         public ICommand SetSiteCommand { get; private set; }
         public ICommand CloneSiteCommand { get; private set; }
 
+        public bool ButtonEnablement {
+            get {
+                return SelectedSite != null;
+            }
+        }
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         [ImportingConstructor]
-        public SitesPlugin(IProfileService profileService) {
+        public SitesPlugin(IProfileService profileService, IOptionsVM optionsVM) {
             if (Settings.Default.UpdateSettings) {
                 Settings.Default.Upgrade();
                 Settings.Default.UpdateSettings = false;
@@ -65,6 +75,7 @@ namespace FMoraes.NINA.SitesPlugin {
             }
             _sites = new ObserveAllCollection<SiteInfo>();
             this.profileService = profileService;
+            this.optionsVM = optionsVM;
 
             if (Settings.Default.Sites == null) {
                 Settings.Default.Sites = new SiteInfo[0];
@@ -91,7 +102,8 @@ namespace FMoraes.NINA.SitesPlugin {
         }
 
         private void AddSite(object arg) {
-            var site = new SiteInfo("new site", 0.0, 0.0, 0.0);
+            var astro = profileService.ActiveProfile.AstrometrySettings;
+            var site = new SiteInfo("Current Location", astro.Latitude, astro.Longitude, astro.Elevation, astro.HorizonFilePath);
             site.PropertyChanged += SiteChanged;
             Sites.Add(site);
             SelectedSite = site;
@@ -101,6 +113,9 @@ namespace FMoraes.NINA.SitesPlugin {
         }
 
         private void RemoveSite(object arg) {
+            if (Sites.Count == 0) {
+                return;
+            }
             if (SelectedSite == null && Sites.Count > 0) {
                 SelectedSite = Sites.Last();
             }
@@ -114,19 +129,34 @@ namespace FMoraes.NINA.SitesPlugin {
         }
 
         private void SetSite(object arg) {
-            if (SelectedSite == null && Sites.Count > 0) {
-                SelectedSite = Sites.Last();
+            if (Sites.Count == 0 || SelectedSite == null) {
+                return;
             }
+            var astro = profileService.ActiveProfile.AstrometrySettings;
             profileService.ChangeLatitude(SelectedSite.Latitude);
             profileService.ChangeLongitude(SelectedSite.Longitude);
             profileService.ChangeElevation(SelectedSite.Elevation);
+            var success = false;
+            try {
+                var setter = optionsVM.GetType().GetMethod("set_HorizonFilePath");
+                setter.Invoke(optionsVM, new object[] { SelectedSite.HorizonFilePath });
+                success = true;
+            }
+            catch(Exception ex) {
+                Logger.Error(ex);
+            }
+            if (!success)
+                astro.HorizonFilePath = SelectedSite.HorizonFilePath;
 
             UpdateActiveSite();
         }
 
         private void CloneSite(object arg) {
+            if (Sites.Count == 0 || SelectedSite == null) {
+                return;
+            }
             var astro = profileService.ActiveProfile.AstrometrySettings;
-            var site = new SiteInfo("Current Location", astro.Latitude, astro.Longitude, astro.Elevation);
+            var site = new SiteInfo("Current Location", astro.Latitude, astro.Longitude, astro.Elevation, astro.HorizonFilePath);
             site.PropertyChanged += SiteChanged;
             Sites.Add(site);
             SelectedSite = site;
@@ -144,7 +174,7 @@ namespace FMoraes.NINA.SitesPlugin {
         private void UpdateActiveSite() {
             var astro = profileService.ActiveProfile.AstrometrySettings;
             foreach (var site in Sites) {
-                site.IsCurrent = (site.Latitude == astro.Latitude && site.Longitude == astro.Longitude && site.Elevation == astro.Elevation);
+                site.IsCurrent = (site.Latitude == astro.Latitude && site.Longitude == astro.Longitude && site.Elevation == astro.Elevation && site.HorizonFilePath == astro.HorizonFilePath);
             }
         }
 
