@@ -2,10 +2,8 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Xml.Serialization;
-using System.Windows.Controls;
 using NINA.Core.Utility;
 using System.IO;
-using System.Windows;
 using System.Windows.Input;
 
 namespace FMoraes.NINA.SitesPlugin

@@ -13,7 +13,6 @@ using System.Xml.Serialization;
 using Settings = FMoraes.NINA.SitesPlugin.Properties.Settings;
 using System.Windows.Input;
 using System.IO;
-using System.Windows.Controls;
 using NINA.WPF.Base.Interfaces.ViewModel;
 
 namespace FMoraes.NINA.SitesPlugin {
